@@ -112,16 +112,14 @@ def expected(first_year, last_year, won, not_won, nominated_not_won):
     """The status a query has, why, and every film that meets its conditions, (title, film year), by year ([] unless
     found). ``won``, ``not_won`` and ``nominated_not_won`` are lists of Award.
 
-    The checks go in this order, the first that holds deciding: the years' order, their range, then whether an award
-    must be won or nominated for, without which the conditions name no list (every film ever made won none).
+    Checks run in order: year order, then year range.
+    The search covers films nominated for at least one award in the dataset.
     """
     if first_year > last_year:
         return Status.INVALID_YEARS, f"the first year {first_year} is after the last year {last_year}", []
     if first_year < FIRST_YEAR or last_year > LAST_YEAR:
         span = f"the years {first_year} to {last_year} go outside the data's {FIRST_YEAR} to {LAST_YEAR}"
         return Status.OUT_OF_RANGE, span, []
-    if not won and not nominated_not_won:
-        return Status.NO_CONDITION, "no award must be won or nominated for, so the conditions name no list", []
     won, not_won, nominated_not_won = (
         [award.value for award in awards] for awards in (won, not_won, nominated_not_won)
     )
@@ -131,5 +129,6 @@ def expected(first_year, last_year, won, not_won, nominated_not_won):
         for title, awards in STANDINGS[year].values()
         if meets(awards, won, not_won, nominated_not_won)
     ]
-    fact = f"{len(films)} films from {first_year} to {last_year} {conditions(won, not_won, nominated_not_won)}"
+    filters = conditions(won, not_won, nominated_not_won) or "with no award filters"
+    fact = f"{len(films)} films from {first_year} to {last_year} {filters}"
     return Status.FOUND if films else Status.NO_MATCHES, fact, films

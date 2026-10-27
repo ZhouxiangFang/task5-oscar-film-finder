@@ -56,7 +56,10 @@ King (no one was nominated) both count as not winning it.
 and lost, list `actor` under `nominated_not_won`, not `not_won`. From 2000 to 2024, 9 Best Picture winners did not win
 Best Director, but only 6 were nominated for it and lost: Argo, Green Book and CODA had no directing nomination.
 
-At least one award must be listed under `won` or `nominated_not_won`; `not_won` alone would match every film ever made.
+Any of the three award lists may be used alone. Searches cover films nominated for at least one of the dataset's
+25 awards, not every film released. For example, "Which films from 2000 to 2024 did not win Best Actor?" lists every
+film in that range in the dataset except Best Actor winners, including films with no Best Actor nomination.
+With all three lists empty, every film in the dataset for the requested years is returned.
 An award may appear in several lists; conditions that contradict each other match no film.
 
 A **film year** is the year whose films a ceremony honors: the 96th Academy Awards, held on March 10, 2024, honored the
@@ -107,7 +110,6 @@ Checks run in this order, the first that holds deciding:
 |---|---|
 | `invalid_years` | `first_year` is after `last_year`. |
 | `out_of_range` | A year is outside 1928 to 2025. |
-| `no_condition` | `won` and `nominated_not_won` are both empty. |
 | `no_matches` | The query is valid, but no films meet all conditions. |
 | `found` | One or more films meet all conditions; the complete list is returned. |
 
@@ -127,6 +129,8 @@ so it is excluded by the Best Picture condition.
 The `find-films` task uses both. The agent reads the nominations for the `won` and `nominated_not_won` awards year by
 year to find candidates, then reads each candidate's record to drop any that won a `not_won` award. No tool applies the
 conditions: the agent filters the films itself.
+
+For `not_won`-only or unfiltered searches, the agent reads all award categories for each year and filters those nominations directly.
 
 ## Verification
 

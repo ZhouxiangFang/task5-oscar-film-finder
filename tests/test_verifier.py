@@ -142,8 +142,6 @@ def test_tells_not_won_apart_from_nominated_but_lost() -> None:
         (query(1927, 2000, ["actor"]), "out_of_range"),
         (query(2000, 2026, ["actor"]), "out_of_range"),
         (query(-5, 3000, [], ["actor"]), "out_of_range"),
-        (query(2000, 2024, [], ["actor"]), "no_condition"),
-        (query(2000, 2024), "no_condition"),
         (query(2000, 2025, ["actor"], ["actor"]), "no_matches"),
         (query(2025, 2025, ["casting"], ["best_picture"]), "no_matches"),
     ],
@@ -172,27 +170,43 @@ def follow_instructions(arguments: dict, tmp_path: Path) -> dict:
         return {"status": "invalid_years", "films": []}
     if first < 1928 or last > 2025:
         return {"status": "out_of_range", "films": []}
-    if not won and not lost:
-        return {"status": "no_condition", "films": []}
     candidates = []
     for year in range(first, last + 1):
-        ceremony = get_ceremony(build_output({"year": year, "awards": [*won, *lost]}, CeremonyInput), tmp_path)
+        ceremony = get_ceremony(build_output({"year": year, "awards": [*won, *lost] or AWARDS}, CeremonyInput), tmp_path)
         films: dict[str, dict[str, bool]] = {}
         for row in ceremony.nominations:
             awards = films.setdefault(row.film, {})
             awards[row.award.value] = awards.get(row.award.value, False) or row.won
         for title, awards in films.items():
+            if not won and not lost and any(awards.get(award) for award in not_won):
+                continue
             if all(awards.get(award) for award in won) and all(award in awards and not awards[award] for award in lost):
                 candidates.append((title, year))
     kept = []
     for title, year in candidates:
-        if not_won:
+        if not_won and (won or lost):
             record = get_film_awards(FilmInput(title=title), tmp_path)
             entry = next(film for film in record.films if film.year == year)
             if any(row.won and row.award.value in not_won for row in entry.nominations):
                 continue
         kept.append((title, year))
     return found(*kept) if kept else {"status": "no_matches", "films": []}
+
+
+@pytest.mark.parametrize("excluded", [[], ["actor"], ["actor", "best_picture"]])
+def test_search_without_positive_conditions(tmp_path: Path, excluded: list[str]) -> None:
+    arguments = query(2000, 2024, not_won=excluded)
+    answer = follow_instructions(arguments, tmp_path)
+    assert answer["status"] == "found" and answer["films"]
+    verdict = verify(arguments, answer)
+    assert verdict["valid"] is True and verdict["score"] == 1.0
+    incomplete = {**answer, "films": answer["films"][1:]}
+    verdict = verify(arguments, incomplete)
+    assert verdict["valid"] is False and len(verdict["details"]["missing"]) == 1
+    if excluded:
+        wrong = {**answer, "films": [*answer["films"], {"title": "Gladiator", "year": 2000}]}
+        verdict = verify(arguments, wrong)
+        assert verdict["valid"] is False and "actor won" in verdict["details"]["wrong"][0]
 
 
 def test_the_instructions_earn_a_valid_verdict(tmp_path: Path) -> None:

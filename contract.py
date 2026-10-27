@@ -49,7 +49,6 @@ class Status(Enum):
     NO_MATCHES = "no_matches"
     INVALID_YEARS = "invalid_years"
     OUT_OF_RANGE = "out_of_range"
-    NO_CONDITION = "no_condition"
 
 
 YEAR = (
@@ -69,7 +68,7 @@ AWARDS = (
 STATUS = (
     "found: one or more films match; no_matches: no films meet all conditions; "
     "invalid_years: first_year is after last_year; out_of_range: a year is outside "
-    "1928 to 2025; no_condition: won and nominated_not_won are both empty"
+    "1928 to 2025"
 )
 
 
@@ -79,7 +78,8 @@ class SearchInput(Output):
     last_year: Annotated[int, "The last film year searched, such as 2024; the range includes it"]
     won: Annotated[list[Award], "The film won every one of these awards"]
     not_won: Annotated[
-        list[Award], "The film won none of these awards; a film not nominated for an award has not won it"
+        list[Award],
+        "The film won none of these awards; not nominated counts. May be used alone, searching films in the dataset",
     ]
     nominated_not_won: Annotated[list[Award], "The film was nominated for every one of these awards and won none"]
 

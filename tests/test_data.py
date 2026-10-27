@@ -343,8 +343,8 @@ def test_each_query_has_the_films_worked_out_by_hand(query: tuple, films: list) 
         ((1927, 2000, [A.ACTOR], [], []), Status.OUT_OF_RANGE),
         ((2000, 2026, [A.ACTOR], [], []), Status.OUT_OF_RANGE),
         ((2026, 2026, [], [], []), Status.OUT_OF_RANGE),  # the range before the conditions
-        ((2000, 2024, [], [A.ACTOR], []), Status.NO_CONDITION),
-        ((2000, 2024, [], [], []), Status.NO_CONDITION),
+        ((2000, 2024, [], [A.ACTOR], []), Status.FOUND),
+        ((2000, 2024, [], [], []), Status.FOUND),
         ((1928, 1928, [], [], [A.ACTOR]), Status.FOUND),
         ((2025, 2025, [A.CASTING], [], []), Status.FOUND),
     ],
@@ -352,6 +352,18 @@ def test_each_query_has_the_films_worked_out_by_hand(query: tuple, films: list) 
 def test_each_query_has_its_status(query: tuple, status: Status) -> None:
     got = expected(*query)
     assert got[0] is status and (got[2] == []) is (status is not Status.FOUND)
+
+
+def test_negative_only_and_unfiltered_queries_search_all_dataset_films() -> None:
+    universe = {(title, year) for year in range(2000, 2025) for _, title, _, _ in CEREMONIES[year][1]}
+    actor_winners = {(title, year) for year, title in zip(range(2000, 2025), ACTOR)}
+    status, _, films = expected(2000, 2024, [], [A.ACTOR], [])
+    assert status is Status.FOUND
+    assert set(films) == universe - actor_winners
+    assert ("Cast Away", 2000) in films  # nominated for Best Actor but lost
+    assert ("Parasite", 2019) in films  # no Best Actor nomination
+    status, _, films = expected(2000, 2024, [], [], [])
+    assert status is Status.FOUND and set(films) == universe
 
 
 def test_gets_a_ceremonys_nominations(tmp_path: Path) -> None:

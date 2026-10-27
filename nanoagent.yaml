@@ -1,7 +1,7 @@
 _ > nanoagent.plugin.v0001.ManifestConfig:
 id: oscar-film-finder
 name: Oscar Film Finder
-version: 0.4.0
+version: 0.5.0
 status: ready
 spec: nanoagent.plugin/v0001
 
@@ -32,13 +32,14 @@ tasks > dict[contract.Task, nanoagent.plugin.v0001.TaskConfig]:
   find-films:
     description: |-
       Find films by year range and awards won, not won, or nominated for but lost. Preserve all user conditions.
+      Search films nominated for any of the dataset's awards. Any condition list may be empty; no conditions returns all films in the year range.
       When verdict.valid is true, no_matches is conclusive: report no matching films and stop. Change conditions only at the user's request.
     runner: agent
     tools: [get_ceremony, get_film_awards]
     reference: null
     instructions: |-
       Submit {"status": ..., "films": [{"title": ..., "year": ...}, ...]}. films is [] unless status is found. Check in this order and submit the first status that applies. Make each turn's calls in parallel: turns are limited.
-      1. If first_year is after last_year, submit invalid_years. If first_year is before 1928 or last_year after 2025, submit out_of_range. If won and nominated_not_won are both empty, submit no_condition.
-      2. Call get_ceremony for every year from first_year to last_year, each with every award in won and nominated_not_won. In each year, group the nominations by film. A film is a candidate if, for every award in won, one of its nominations for it has won true, and, for every award in nominated_not_won, it has a nomination for it and none has won true.
-      3. If not_won is empty, keep every candidate. Otherwise call get_film_awards for each candidate's title, and keep a candidate only if, in its entry for that year, no nomination for an award in not_won has won true. A film not nominated for an award did not win it.
+      1. If first_year is after last_year, submit invalid_years. If first_year is before 1928 or last_year after 2025, submit out_of_range.
+      2. Call get_ceremony for every year from first_year to last_year, each with every award in won and nominated_not_won. If both lists are empty, request all 25 award categories instead. Group nominations by film within each year. A candidate must have won every won award and been nominated for, but won none of, the nominated_not_won awards. If both lists are empty, every film in those nominations is a candidate.
+      3. Keep candidates that won none of the not_won awards; not nominated counts as not won. For not_won-only queries, check the complete nominations from step 2 directly. Otherwise, if not_won is nonempty, call get_film_awards for each candidate and check its entry for that year.
       4. Submit found with {"title": the title as get_ceremony gives it, "year": the year} for every film kept, each once. If none is kept, submit no_matches with [].
