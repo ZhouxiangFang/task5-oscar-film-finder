@@ -71,11 +71,18 @@ def test_accepts_the_right_films() -> None:
     assert verify(tar, found(*[("TAR" if title == "Tár" else title, year) for title, year in tar_films]))["valid"]
 
 
-def test_accepts_an_empty_list_when_no_film_meets_the_conditions() -> None:
-    nobody = query(2000, 2025, ["actor"], ["actor"])
-    assert verify(nobody, found())["valid"] is True
-    verdict = verify(nobody, found(("Gladiator", 2000)))
-    assert verdict["valid"] is False and verdict["score"] == 0.0 and "1 wrong" in verdict["message"]
+def test_casting_winner_excluded_by_best_picture_has_no_matches(tmp_path: Path) -> None:
+    arguments = query(2025, 2025, ["casting"], ["best_picture"])
+    answer = follow_instructions(arguments, tmp_path)
+    assert answer == {"status": "no_matches", "films": []}
+    verdict = verify(arguments, answer)
+    assert verdict["valid"] is True and verdict["score"] == 1.0
+    assert "0 films from 2025 to 2025 won casting; did not win best_picture" in verdict["message"]
+    for incorrect in (found(), found(("One Battle after Another", 2025))):
+        verdict = verify(arguments, incorrect)
+        assert verdict["valid"] is False and verdict["score"] == 0.0
+        assert "the status is no_matches" in verdict["message"]
+    assert verify(query(2025, 2025, ["casting"]), found(("One Battle after Another", 2025)))["valid"] is True
 
 
 @pytest.mark.parametrize(
@@ -137,6 +144,8 @@ def test_tells_not_won_apart_from_nominated_but_lost() -> None:
         (query(-5, 3000, [], ["actor"]), "out_of_range"),
         (query(2000, 2024, [], ["actor"]), "no_condition"),
         (query(2000, 2024), "no_condition"),
+        (query(2000, 2025, ["actor"], ["actor"]), "no_matches"),
+        (query(2025, 2025, ["casting"], ["best_picture"]), "no_matches"),
     ],
 )
 def test_accepts_only_the_status_the_query_has(arguments: dict, status: str) -> None:
@@ -183,7 +192,7 @@ def follow_instructions(arguments: dict, tmp_path: Path) -> dict:
             if any(row.won and row.award.value in not_won for row in entry.nominations):
                 continue
         kept.append((title, year))
-    return found(*kept)
+    return found(*kept) if kept else {"status": "no_matches", "films": []}
 
 
 def test_the_instructions_earn_a_valid_verdict(tmp_path: Path) -> None:

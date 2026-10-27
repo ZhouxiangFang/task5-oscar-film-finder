@@ -46,6 +46,7 @@ class Award(Enum):
 
 class Status(Enum):
     FOUND = "found"
+    NO_MATCHES = "no_matches"
     INVALID_YEARS = "invalid_years"
     OUT_OF_RANGE = "out_of_range"
     NO_CONDITION = "no_condition"
@@ -66,7 +67,8 @@ AWARDS = (
     "then sound mixing; black-and-white and color awards count as one"
 )
 STATUS = (
-    "found: success, even with no film; invalid_years: first_year is after last_year; out_of_range: a year is outside "
+    "found: one or more films match; no_matches: no films meet all conditions; "
+    "invalid_years: first_year is after last_year; out_of_range: a year is outside "
     "1928 to 2025; no_condition: won and nominated_not_won are both empty"
 )
 

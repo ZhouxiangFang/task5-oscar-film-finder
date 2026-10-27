@@ -132,4 +132,4 @@ def expected(first_year, last_year, won, not_won, nominated_not_won):
         if meets(awards, won, not_won, nominated_not_won)
     ]
     fact = f"{len(films)} films from {first_year} to {last_year} {conditions(won, not_won, nominated_not_won)}"
-    return Status.FOUND, fact, films
+    return Status.FOUND if films else Status.NO_MATCHES, fact, films

@@ -326,12 +326,13 @@ def test_titles_compare_folded() -> None:
         ),
         ((2023, 2023, [A.DIRECTING], [A.BEST_PICTURE], []), []),
         ((2000, 2025, [A.ACTOR], [A.ACTOR], []), []),  # contradictory conditions name no film
+        ((2025, 2025, [A.CASTING], [A.BEST_PICTURE], []), []),
         ((2010, 2010, [A.ACTOR, A.BEST_PICTURE], [], [A.SUPPORTING_ACTOR]), [("The King's Speech", 2010)]),
     ],
 )
 def test_each_query_has_the_films_worked_out_by_hand(query: tuple, films: list) -> None:
     status, _, found = expected(*query)
-    assert (status, found) == (Status.FOUND, films)
+    assert (status, found) == (Status.FOUND if films else Status.NO_MATCHES, films)
 
 
 @pytest.mark.parametrize(

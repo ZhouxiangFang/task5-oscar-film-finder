@@ -108,9 +108,14 @@ Checks run in this order, the first that holds deciding:
 | `invalid_years` | `first_year` is after `last_year`. |
 | `out_of_range` | A year is outside 1928 to 2025. |
 | `no_condition` | `won` and `nominated_not_won` are both empty. |
-| `found` | The films are listed; the list may be empty. |
+| `no_matches` | The query is valid, but no films meet all conditions. |
+| `found` | One or more films meet all conditions; the complete list is returned. |
 
 Unless the status is `found`, `films` is empty.
+
+For example, "Which 2025 films won the Oscar for Casting but did not win Best Picture?" returns
+`{"status": "no_matches", "films": []}`. In the bundled dataset, One Battle after Another won both awards,
+so it is excluded by the Best Picture condition.
 
 ## Tools
 
