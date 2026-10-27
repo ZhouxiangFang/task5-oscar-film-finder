@@ -1,0 +1,12 @@
+_ > nanoagent.plugin.v0001.ProductConfig:
+tagline: "Find Oscar films by the awards they won or lost"
+summary: "Pick a range of years and the Academy Awards a film must have won, must not have won, or was nominated for but lost. The agent reads each ceremony's nominations and each candidate's full record, then lists every film that meets all the conditions. Covers the 1st to the 98th Academy Awards, the films of 1928 to 2025."
+highlights:
+  - "Covers 25 competitive awards across all 98 ceremonies, held 1929 to 2026"
+  - "Tells \"did not win\" (not nominated counts) apart from \"nominated but lost\""
+  - "Lists each film with the year of the ceremony that honored it"
+  - "Every list is checked against a fixed copy of the Academy's records for missing and wrong films"
+steps:
+  - "Ask: Which films from 2000 to 2024 won Best Picture and Best Director but not Best Actor?"
+  - "The agent reads each year's nominations and the candidates' records"
+  - "View the film list and its verification result"
