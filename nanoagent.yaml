@@ -1,7 +1,7 @@
 _ > nanoagent.plugin.v0001.ManifestConfig:
 id: oscar-film-finder
 name: Oscar Film Finder
-version: 0.3.0
+version: 0.4.0
 status: ready
 spec: nanoagent.plugin/v0001
 
@@ -19,25 +19,20 @@ permissions > nanoagent.plugin.v0001.PermissionsConfig:
 tools > dict[contract.Tool, nanoagent.plugin.v0001.ToolConfig]:
   get_ceremony:
     description: |-
-      Read one Academy Awards ceremony's nominations for some awards. Pass a film year from 1928 to 2025 and the awards to read.
-      A film year is the year whose films a ceremony honors: 2023 is the 96th Academy Awards, held in 2024.
-      Returns {"year", "ceremony", "nominations": [{"award", "film", "nominee", "won"}, ...]}, award by award.
-      A nomination naming several films is listed once for each film. An award can have two winners: a tie, or before 1967 a black-and-white and a color award.
-      Years outside 1928 to 2025 raise "no ceremony".
+      Read nominations and winners for selected awards in film years 1928–2025. Film year 2023 means the 96th ceremony, held in 2024.
+      Returns nominations grouped by award, one entry per named film. Ties and separate black-and-white/color awards can produce multiple winners.
+      Out-of-range years raise "no ceremony".
   get_film_awards:
     description: |-
-      Read a film's nominations for every award, at every ceremony it was nominated at. Pass a title as get_ceremony gives it; case, accents, and spacing are ignored.
-      Returns {"title", "films": [{"title", "year", "ceremony", "nominations": [{"award", "nominee", "won"}, ...]}, ...]}, earliest first.
-      Films sharing a title, such as remakes, have separate entries, told apart by year.
-      A title no film nominated for these awards has raises "no such film".
+      Read all nominations and wins for a title, earliest ceremony first. Case, accents, and spacing are ignored; years distinguish films sharing a title.
+      Unknown titles raise "no such film".
 
 # One entry per contract.Task; its input class is contract.TASKS's.
 tasks > dict[contract.Task, nanoagent.plugin.v0001.TaskConfig]:
   find-films:
     description: |-
-      List the Academy Award films of a range of years that won, did not win, or were nominated for but lost given awards.
-      Preserve every condition in the user's question. A result with verdict.valid true is the complete, verified answer to that query, including no_matches: no films meet all conditions, not missing data or a failed search.
-      After a verified no_matches, report that no films match and stop. Do not run extra searches with removed or reversed conditions to explain or confirm the empty result. Search different conditions only when the user asks for them.
+      Find films by year range and awards won, not won, or nominated for but lost. Preserve all user conditions.
+      When verdict.valid is true, no_matches is conclusive: report no matching films and stop. Change conditions only at the user's request.
     runner: agent
     tools: [get_ceremony, get_film_awards]
     reference: null
